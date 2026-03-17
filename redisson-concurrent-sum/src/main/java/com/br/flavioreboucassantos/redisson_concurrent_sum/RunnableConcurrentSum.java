@@ -11,7 +11,7 @@ public class RunnableConcurrentSum implements Runnable {
 	private final long nsTimeBetweenSums;
 
 	final RedissonClient redisson;
-	final String lockName;
+	final RLock lock;
 	final RBucket<Integer> bucket;
 
 	/*
@@ -40,14 +40,12 @@ public class RunnableConcurrentSum implements Runnable {
 	 * Thread Safe Sum Task
 	 */
 	private void threadSafeSumTask() {
-		final RLock lock = redisson.getLock(lockName); // lockName concorre com chaves no Redis
-
 		try {
 			/*
 			 * - Não realiza rollbacks.
 			 * - Não executa releitura da variável remota.
 			 * - Não sobrecarrega o processador do microserviço.
-			 * - O atraso para alcançar allAddersConcluded é devido a troca de dados para manutenção da Lock Remota em cada chamada local.
+			 * - O atraso para alcançar allAddersConcluded é devido a troca de dados para utilização da Lock Remota em cada chamada local.
 			 */
 			lock.lock();
 
@@ -84,9 +82,9 @@ public class RunnableConcurrentSum implements Runnable {
 		this.numberOfSums = numberOfSums;
 		this.nsTimeBetweenSums = nsTimeBetweenSums;
 
-		this.redisson = redisson;
-		this.lockName = "_" + keyName;
+		this.redisson = redisson;		
 		bucket = redisson.getBucket(keyName, IntegerCodec.INSTANCE);
+		lock = redisson.getLock("_" + keyName); // lockName concorre com chaves no Redis
 	}
 
 	@Override
