@@ -9,7 +9,7 @@ public class ConcurrentSum {
 	/*
 	 * Change Here to Select Between runThreadSafeSumTask or runNonThreadSafeSumTask
 	 */
-	static public final boolean isThreadSafe = true;
+	static public final boolean isThreadSafe = false;
 
 	/*
 	 * Configurations of Concurrent Sum

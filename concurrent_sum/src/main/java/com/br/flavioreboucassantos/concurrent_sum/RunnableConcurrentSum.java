@@ -16,29 +16,34 @@ public class RunnableConcurrentSum implements Runnable {
 	/*
 	 * Non Thread Safe Sum Task
 	 */
-	private void nonThreadSafeSumTask() {
+	private void nonThreadSafeSumTask() throws Exception {
 		int integer = Integer.valueOf(jedis.get(keyName));
 		integer++;
 		jedis.set(keyName, String.valueOf(integer));
 	}
 
 	private void runNonThreadSafeSumTask() {
-		// sum every nsTimeBetweenSums
 		int numberOfSum = 0;
-		while (numberOfSum++ < numberOfSums) {
-			nonThreadSafeSumTask();
-			final long timeNextRun = System.nanoTime() + nsTimeBetweenSums;
-//			System.out.println(numberOfSum + " >>> " + timeNextRun);
-			while (System.nanoTime() < timeNextRun)
-				Thread.yield();
+		try {
+			// sum every nsTimeBetweenSums
+			while (numberOfSum++ < numberOfSums) {
+				nonThreadSafeSumTask();
+				final long timeNextRun = System.nanoTime() + nsTimeBetweenSums;
+//				System.out.println(numberOfSum + " >>> " + timeNextRun);
+				while (System.nanoTime() < timeNextRun)
+					Thread.yield();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			ConcurrentSum.adderConcluded(0);
 		}
-		ConcurrentSum.adderConcluded(0);
 	}
 
 	/*
 	 * Thread Safe Sum Task
 	 */
-	private boolean threadSafeSumTask() {
+	private boolean threadSafeSumTask() throws Exception {
 		/*
 		 * Dica de Outra Abordagem:
 		 * - Usar get dentro de transaction t.get("chave") somente quando precisar do resultado final da operação, pela sequência de realização do jedis.multi()
@@ -69,34 +74,38 @@ public class RunnableConcurrentSum implements Runnable {
 			// Transação concluída com sucesso!
 			return true;
 		} catch (Exception e) { // Captura erros de erro de lógica ou validação falha.
-			e.printStackTrace();
 			// Use t.discard() para:
 			// - Abortar Transações: Se você iniciou uma série de operações com MULTI e, por algum motivo (erro de lógica, validação falha), decidiu que não deve mais aplicá-las, o DISCARD garante que nada seja alterado.
 			// - Limpar o Buffer da Transação: Remove da fila todos os comandos que foram enviados após o MULTI e antes do EXEC.
 			// - Encerrar o modo MULTI: A conexão retorna ao estado normal, saindo do contexto de transação.
 			t.discard();
 
-			return true; // DISCARDA OPERAÇÃO FALHA - NÂO RETENTA
+			throw e; // Eliminate Thread
 		} finally {
 			jedis.unwatch();
 		}
 	}
 
 	private void runThreadSafeSumTask() {
-		// sum every nsTimeBetweenSums
 		int numberOfSum = 0;
 		int countRollbacks = 0;
-		while (numberOfSum++ < numberOfSums) {
-			if (!threadSafeSumTask()) {
-				numberOfSum--;
-				countRollbacks++;
+		try {
+			// sum every nsTimeBetweenSums
+			while (numberOfSum++ < numberOfSums) {
+				if (!threadSafeSumTask()) {
+					numberOfSum--;
+					countRollbacks++;
+				}
+				final long timeNextRun = System.nanoTime() + nsTimeBetweenSums;
+//				System.out.println(numberOfSum + " >>> " + timeNextRun);
+				while (System.nanoTime() < timeNextRun)
+					Thread.yield();
 			}
-			final long timeNextRun = System.nanoTime() + nsTimeBetweenSums;
-//			System.out.println(numberOfSum + " >>> " + timeNextRun);
-			while (System.nanoTime() < timeNextRun)
-				Thread.yield();
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			ConcurrentSum.adderConcluded(countRollbacks);
 		}
-		ConcurrentSum.adderConcluded(countRollbacks);
 	}
 
 	public RunnableConcurrentSum(Jedis jedis, final String keyName, final int numberOfSums, final long nsTimeBetweenSums) {
