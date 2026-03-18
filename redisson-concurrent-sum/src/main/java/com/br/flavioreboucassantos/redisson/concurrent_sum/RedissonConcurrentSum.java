@@ -1,4 +1,4 @@
-package com.br.flavioreboucassantos.redisson_concurrent_sum;
+package com.br.flavioreboucassantos.redisson.concurrent_sum;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -48,7 +48,7 @@ public class RedissonConcurrentSum {
 		bucket.set(0);
 
 		for (int i = 0; i < numberOfAdders; i++) {
-			Thread thread = new Thread(new RunnableConcurrentSum(createRedissonClientInstance(), keyName, numberOfSums, nsTimeBetweenSums));
+			Thread thread = new Thread(new RedissonRunnableConcurrentSum(createRedissonClientInstance(), keyName, numberOfSums, nsTimeBetweenSums));
 			thread.start();
 		}
 

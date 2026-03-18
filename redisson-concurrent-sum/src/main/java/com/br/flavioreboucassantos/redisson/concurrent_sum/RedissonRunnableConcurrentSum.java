@@ -1,11 +1,11 @@
-package com.br.flavioreboucassantos.redisson_concurrent_sum;
+package com.br.flavioreboucassantos.redisson.concurrent_sum;
 
 import org.redisson.api.RBucket;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.redisson.client.codec.IntegerCodec;
 
-public class RunnableConcurrentSum implements Runnable {
+public class RedissonRunnableConcurrentSum implements Runnable {
 
 	private final int numberOfSums;
 	private final long nsTimeBetweenSums;
@@ -17,7 +17,7 @@ public class RunnableConcurrentSum implements Runnable {
 	/*
 	 * Non Thread Safe Sum Task
 	 */
-	private void nonThreadSafeSumTask() throws Exception {		
+	private void nonThreadSafeSumTask() throws Exception {
 		int integer = bucket.get();
 		integer++;
 		bucket.set(integer);
@@ -45,7 +45,7 @@ public class RunnableConcurrentSum implements Runnable {
 	 * Thread Safe Sum Task
 	 */
 	private void threadSafeSumTask() throws Exception {
-		try {			
+		try {
 			/*
 			 * - Não realiza rollbacks.
 			 * - Não executa releitura da variável remota.
@@ -88,7 +88,7 @@ public class RunnableConcurrentSum implements Runnable {
 		}
 	}
 
-	public RunnableConcurrentSum(RedissonClient redisson, final String keyName, final int numberOfSums, final long nsTimeBetweenSums) {
+	public RedissonRunnableConcurrentSum(RedissonClient redisson, final String keyName, final int numberOfSums, final long nsTimeBetweenSums) {
 		this.numberOfSums = numberOfSums;
 		this.nsTimeBetweenSums = nsTimeBetweenSums;
 
