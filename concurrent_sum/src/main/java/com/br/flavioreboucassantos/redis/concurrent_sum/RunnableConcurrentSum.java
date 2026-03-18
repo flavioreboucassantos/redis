@@ -1,4 +1,4 @@
-package com.br.flavioreboucassantos.concurrent_sum;
+package com.br.flavioreboucassantos.redis.concurrent_sum;
 
 import java.util.List;
 

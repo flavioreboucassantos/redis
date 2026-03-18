@@ -4,7 +4,7 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>com.br.flavioreboucassantos</groupId>
+	<groupId>com.br.flavioreboucassantos.redis</groupId>
 	<artifactId>concurrent_sum</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 
@@ -35,8 +35,8 @@
 			<artifactId>jedis</artifactId>
 			<version>7.4.0</version>
 			<scope>compile</scope>
-		</dependency>		
-		
+		</dependency>
+
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
