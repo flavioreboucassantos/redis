@@ -4,7 +4,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import redis.clients.jedis.Jedis;
 
-public class ConcurrentSum {
+public class RedisConcurrentSum {
 
 	/*
 	 * Change Here to Select Between runThreadSafeSumTask or runNonThreadSafeSumTask
@@ -41,7 +41,7 @@ public class ConcurrentSum {
 		jedis.close();
 
 		for (int i = 0; i < numberOfAdders; i++) {
-			Thread thread = new Thread(new RunnableConcurrentSum(getNewJedisConnection(), keyName, numberOfSums, nsTimeBetweenSums));
+			Thread thread = new Thread(new RedisRunnableConcurrentSum(getNewJedisConnection(), keyName, numberOfSums, nsTimeBetweenSums));
 			thread.start();
 		}
 

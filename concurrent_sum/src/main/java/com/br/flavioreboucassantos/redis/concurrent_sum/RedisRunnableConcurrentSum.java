@@ -5,7 +5,7 @@ import java.util.List;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Transaction;
 
-public class RunnableConcurrentSum implements Runnable {
+public class RedisRunnableConcurrentSum implements Runnable {
 
 	private final int numberOfSums;
 	private final long nsTimeBetweenSums;
@@ -36,7 +36,7 @@ public class RunnableConcurrentSum implements Runnable {
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
-			ConcurrentSum.adderConcluded(0);
+			RedisConcurrentSum.adderConcluded(0);
 		}
 	}
 
@@ -104,11 +104,11 @@ public class RunnableConcurrentSum implements Runnable {
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
-			ConcurrentSum.adderConcluded(countRollbacks);
+			RedisConcurrentSum.adderConcluded(countRollbacks);
 		}
 	}
 
-	public RunnableConcurrentSum(Jedis jedis, final String keyName, final int numberOfSums, final long nsTimeBetweenSums) {
+	public RedisRunnableConcurrentSum(Jedis jedis, final String keyName, final int numberOfSums, final long nsTimeBetweenSums) {
 		this.numberOfSums = numberOfSums;
 		this.nsTimeBetweenSums = nsTimeBetweenSums;
 
@@ -120,7 +120,7 @@ public class RunnableConcurrentSum implements Runnable {
 	public void run() {
 		try {
 
-			if (ConcurrentSum.isThreadSafe)
+			if (RedisConcurrentSum.isThreadSafe)
 				runThreadSafeSumTask();
 			else
 				runNonThreadSafeSumTask();
