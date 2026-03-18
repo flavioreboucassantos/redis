@@ -17,30 +17,35 @@ public class RunnableConcurrentSum implements Runnable {
 	/*
 	 * Non Thread Safe Sum Task
 	 */
-	private void nonThreadSafeSumTask() {
+	private void nonThreadSafeSumTask() throws Exception {		
 		int integer = bucket.get();
 		integer++;
 		bucket.set(integer);
 	}
 
 	private void runNonThreadSafeSumTask() {
-		// sum every nsTimeBetweenSums
-		int numberOfSum = 0;
-		while (numberOfSum++ < numberOfSums) {
-			nonThreadSafeSumTask();
-			final long timeNextRun = System.nanoTime() + nsTimeBetweenSums;
-//			System.out.println(numberOfSum + " >>> " + timeNextRun);
-			while (System.nanoTime() < timeNextRun)
-				Thread.yield();
+		try {
+			// sum every nsTimeBetweenSums
+			int numberOfSum = 0;
+			while (numberOfSum++ < numberOfSums) {
+				nonThreadSafeSumTask();
+				final long timeNextRun = System.nanoTime() + nsTimeBetweenSums;
+//				System.out.println(numberOfSum + " >>> " + timeNextRun);
+				while (System.nanoTime() < timeNextRun)
+					Thread.yield();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			RedissonConcurrentSum.adderConcluded(0);
 		}
-		RedissonConcurrentSum.adderConcluded(0);
 	}
 
 	/*
 	 * Thread Safe Sum Task
 	 */
-	private void threadSafeSumTask() {
-		try {
+	private void threadSafeSumTask() throws Exception {
+		try {			
 			/*
 			 * - Não realiza rollbacks.
 			 * - Não executa releitura da variável remota.
@@ -56,7 +61,7 @@ public class RunnableConcurrentSum implements Runnable {
 			bucket.set(integer);
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			throw e;
 
 		} finally {
 			if (lock.isHeldByCurrentThread())
@@ -65,24 +70,29 @@ public class RunnableConcurrentSum implements Runnable {
 	}
 
 	private void runThreadSafeSumTask() {
-		// sum every nsTimeBetweenSums
 		int numberOfSum = 0;
 		int countRollbacks = 0;
-		while (numberOfSum++ < numberOfSums) {
-			threadSafeSumTask();
-			final long timeNextRun = System.nanoTime() + nsTimeBetweenSums;
-//			System.out.println(numberOfSum + " >>> " + timeNextRun);
-			while (System.nanoTime() < timeNextRun)
-				Thread.yield();
+		try {
+			// sum every nsTimeBetweenSums
+			while (numberOfSum++ < numberOfSums) {
+				threadSafeSumTask();
+				final long timeNextRun = System.nanoTime() + nsTimeBetweenSums;
+//				System.out.println(numberOfSum + " >>> " + timeNextRun);
+				while (System.nanoTime() < timeNextRun)
+					Thread.yield();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			RedissonConcurrentSum.adderConcluded(countRollbacks);
 		}
-		RedissonConcurrentSum.adderConcluded(countRollbacks);
 	}
 
 	public RunnableConcurrentSum(RedissonClient redisson, final String keyName, final int numberOfSums, final long nsTimeBetweenSums) {
 		this.numberOfSums = numberOfSums;
 		this.nsTimeBetweenSums = nsTimeBetweenSums;
 
-		this.redisson = redisson;		
+		this.redisson = redisson;
 		bucket = redisson.getBucket(keyName, IntegerCodec.INSTANCE);
 		lock = redisson.getLock("_" + keyName); // lockName concorre com chaves no Redis
 	}
